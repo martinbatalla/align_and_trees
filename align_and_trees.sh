@@ -6,7 +6,6 @@
 #SBATCH --mem=64G
 #SBATCH --time=48:00:00
 
-#This is a test
 
 # --- SETUP ENVIRONMENT (Do this once) ---
 source /home/mbata001/envs/miniconda3/etc/profile.d/conda.sh
