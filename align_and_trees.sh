@@ -12,8 +12,16 @@ CONDA_PATH="/home/mbata001/envs/miniconda3/etc/profile.d/conda.sh"
 source $CONDA_PATH
 conda activate hybphaser_v1
 
+
+
 # --- DEFINE PATHS ---
-BASE_DIR="/home/mbata001/seqs/target/hybphaser/all/HP4-non-hybrids"
+BASE_DIR=$1
+#Check if BASE_DIR was provided
+if [ -z "$BASE_DIR" ]; then
+    echo "Error: No project directory provided."
+    echo "Usage: sbatch align_and_trees.sh /path/to/project_folder"
+    exit 1
+fi
 INPUT_DIR="$BASE_DIR/merged_loci_consensus"
 ALIGNED_DIR="$BASE_DIR/loci_aligned"
 DISCARD_DIR="$BASE_DIR/loci_discarded"
