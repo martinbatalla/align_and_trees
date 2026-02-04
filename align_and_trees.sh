@@ -8,15 +8,19 @@
 
 
 # --- SETUP ENVIRONMENT (Do this once) ---
-source /home/mbata001/envs/miniconda3/etc/profile.d/conda.sh
+CONDA_PATH="/home/mbata001/envs/miniconda3/etc/profile.d/conda.sh"
+source $CONDA_PATH
 conda activate hybphaser_v1
 
 # --- DEFINE PATHS ---
-INPUT_DIR="/home/mbata001/seqs/target/hybphaser/all/HP4-non-hybrids/merged_loci_consensus"
-ALIGNED_DIR="/home/mbata001/seqs/target/hybphaser/all/HP4-non-hybrids/loci_aligned"
-DISCARD_DIR="/home/mbata001/seqs/target/hybphaser/all/HP4-non-hybrids/loci_discarded"
-GENETREE_DIR="/home/mbata001/seqs/target/hybphaser/all/HP4-non-hybrids/gene_trees"
+BASE_DIR="/home/mbata001/seqs/target/hybphaser/all/HP4-non-hybrids"
+INPUT_DIR="$BASE_DIR/merged_loci_consensus"
+ALIGNED_DIR="$BASE_DIR/loci_aligned"
+DISCARD_DIR="$BASE_DIR/loci_discarded"
+GENETREE_DIR="$BASE_DIR/gene_trees"
 MIN_TAXA=4
+ASTRAL_JAR="/home/mbata001/envs/miniconda3/envs/hybphaser_v1/share/astral-tree-5.7.8-1/astral.5.7.8.jar"
+
 
 mkdir -p "$ALIGNED_DIR"
 mkdir -p "$DISCARD_DIR"
@@ -95,7 +99,6 @@ echo "Collapsing low support branches (BS < 10)..."
 nw_ed all_gene_trees.newick 'i & b < 10' o > all_gene_trees_collapsed.tre
 
 echo "Running ASTRAL..."
-ASTRAL_JAR="/home/mbata001/envs/miniconda3/envs/hybphaser_v1/share/astral-tree-5.7.8-1/astral.5.7.8.jar"
 
 # INCREASED RAM TO 16G
 java -Xmx16g -jar "$ASTRAL_JAR" -i all_gene_trees_collapsed.tre -o astral_all_genes_phased.tre 2> astral.log
