@@ -2,6 +2,7 @@
 loci_aligned/
 loci_discarded/
 gene_trees/
+merged_loci_consensus/
 
 # Ignore log files
 *.log
