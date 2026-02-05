@@ -1,0 +1,13 @@
+# Ignore directories created by the script
+loci_aligned/
+loci_discarded/
+gene_trees/
+
+# Ignore log files
+*.log
+
+# Ignore common bioinformatics data/output extensions
+*.fasta
+*.treefile
+*.newick
+*.aln
