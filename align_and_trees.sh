@@ -93,6 +93,9 @@ find "$ALIGNED_DIR" -name "*.fasta" -print0 | xargs -0 -P 16 -I {} bash -c '
     # Only run if output does not exist (resume capability)
     if [ ! -f "${OUT_PREFIX}.treefile" ]; then
          iqtree2 -s "$INPUT_FILE" -m MFP -B 1000 -T 1 --quiet --prefix "$OUT_PREFIX"
+         echo "Made $BASE_NAME tree"
+    else
+        echo "$BASE_NAME previously done; skipping"
     fi
 ' _ "$GENETREE_DIR"
 
