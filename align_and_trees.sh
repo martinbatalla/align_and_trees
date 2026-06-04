@@ -8,28 +8,41 @@
 
 
 #align_and_trees.sh
-#Usage: align_and_trees.sh path/to/astral.jar path/to/base_directory/
+#Usage: align_and_trees.sh -j path/to/astral.jar -d path/to/base_directory/
 
 
-# --- DEFINE PATHS ---
-ASTRAL_JAR=$1
+# --- DEFINE PATHS AND PARAMETERS ---
+MIN_TAXA=4
+MIN_SUPPORT=50
+ASTRAL_JAR=""
+BASE_DIR=""
+
+while [[ "$#" -gt 0 ]]; do
+    case $1 in
+        -j|--jar) ASTRAL_JAR="$2"; shift ;;
+        -d|--dir) BASE_DIR="$2"; shift ;;
+        -samples) MIN_TAXA="$2"; shift ;;
+        -support) MIN_SUPPORT="$2"; shift ;;
+        *) echo "Unknown parameter passed: $1"; exit 1 ;;
+    esac
+    shift
+done
+
+# --- PARSE ARGUMENTS ---
 if [ -z "$ASTRAL_JAR" ]; then
-    echo "No path to astral jar file provided. Rerun using 'align_and_trees.sh path/to/astral.jar'"
+    echo "No path to astral jar file provided. Rerun using 'align_and_trees.sh -j path/to/astral.jar -d path/to/base_directory/'"
     exit 1
 fi
 
-BASE_DIR=${2%/}
 #Check if BASE_DIR was provided
 if [ -z "$BASE_DIR" ]; then
     echo "No directory provided. Using current directory: $(pwd)"
     BASE_DIR=$(pwd)
 fi
-INPUT_DIR="$BASE_DIR/merged_loci_consensus"
+INPUT_DIR="$BASE_DIR/merged_loci"
 ALIGNED_DIR="$BASE_DIR/loci_aligned"
 DISCARD_DIR="$BASE_DIR/loci_discarded"
 GENETREE_DIR="$BASE_DIR/gene_trees"
-MIN_TAXA=4
-
 
 
 mkdir -p "$ALIGNED_DIR"
@@ -83,7 +96,7 @@ echo "Filtered. Kept: $kept_count | Discarded: $removed_count"
 
 ################################### GENE TREES #################################
 
-echo "Starting IQ-TREE 2 (Parallel)..."
+echo "Starting IQ-TREE 2"
 
 find "$ALIGNED_DIR" -name "*.fasta" -print0 | xargs -0 -P 16 -I {} bash -c '
     INPUT_FILE="{}"
@@ -110,12 +123,11 @@ cat "$GENETREE_DIR"/*.treefile > "$GENETREE_DIR/all_gene_trees.newick"
 
 cd "$GENETREE_DIR"
 
-echo "Collapsing low support branches (BS < 10)..."
-nw_ed all_gene_trees.newick 'i & b < 10' o > all_gene_trees_collapsed.tre
-
+echo "Collapsing low support branches"
+nw_ed all_gene_trees.newick 'i & b < '"$MIN_SUPPORT"' o' > all_gene_trees_collapsed.tre
 echo "Running ASTRAL..."
 
 # -Xmx16g to increase RAM to 16G
-java -Xmx16g -jar "$ASTRAL_JAR" -i all_gene_trees_collapsed.tre -o astral_all_genes_phased.tre 2> astral.log
+java -Xmx16g -jar "$ASTRAL_JAR" -i all_gene_trees_collapsed.tre -o astral_all_genes.tre 2> astral.log
 
 echo "Done."
