@@ -51,72 +51,72 @@ mkdir -p "$GENETREE_DIR"
 
 ################################### ALIGNING ##################################
 
-echo "--- Starting MAFFT Alignment (Parallel) ---"
+# echo "--- Starting MAFFT Alignment (Parallel) ---"
 
-# OPTIMIZATION: Run 16 MAFFT jobs at once, 1 thread each. Much faster for gene lists.
-find "$INPUT_DIR" -name "*.fasta" -print0 | xargs -0 -P 16 -I {} bash -c '
-    INPUT_FILE="{}"
-    ALIGNED_DIR=$1
-    BASE_NAME=$(basename "$INPUT_FILE")
-    OUTPUT_FILE="$ALIGNED_DIR/$BASE_NAME"
+# # OPTIMIZATION: Run 16 MAFFT jobs at once, 1 thread each. Much faster for gene lists.
+# find "$INPUT_DIR" -name "*.fasta" -print0 | xargs -0 -P 16 -I {} bash -c '
+#     INPUT_FILE="{}"
+#     ALIGNED_DIR=$1
+#     BASE_NAME=$(basename "$INPUT_FILE")
+#     OUTPUT_FILE="$ALIGNED_DIR/$BASE_NAME"
 
-    if [ -s "$INPUT_FILE" ]; then
-        if [ ! -f "$OUTPUT_FILE" ]; then
-            # --auto automatically selects strategy (FFT-NS-2 for large, L-INS-i for small)
-            mafft --thread 1 --auto --quiet "$INPUT_FILE" > "$OUTPUT_FILE"
-            echo "Aligned: $BASE_NAME"
-        else
-            echo "Alignment for $BASE_NAME previously done; skipping"
-        fi
-    fi
-' _ "$ALIGNED_DIR"
+#     if [ -s "$INPUT_FILE" ]; then
+#         if [ ! -f "$OUTPUT_FILE" ]; then
+#             # --auto automatically selects strategy (FFT-NS-2 for large, L-INS-i for small)
+#             mafft --thread 1 --auto --quiet "$INPUT_FILE" > "$OUTPUT_FILE"
+#             echo "Aligned: $BASE_NAME"
+#         else
+#             echo "Alignment for $BASE_NAME previously done; skipping"
+#         fi
+#     fi
+# ' _ "$ALIGNED_DIR"
 
-echo "Alignment complete."
+# echo "Alignment complete."
 
-################################### FILTERING #################################
+# ################################### FILTERING #################################
 
-echo "--- Starting Filtering (Min Taxa: $MIN_TAXA) ---"
+# echo "--- Starting Filtering (Min Taxa: $MIN_TAXA) ---"
 
-removed_count=0
-kept_count=0
+# removed_count=0
+# kept_count=0
 
-for file in "$ALIGNED_DIR"/*.fasta; do
-    [ -e "$file" ] || continue
-    taxa_count=$(grep -c ">" "$file")
+# for file in "$ALIGNED_DIR"/*.fasta; do
+#     [ -e "$file" ] || continue
+#     taxa_count=$(grep -c ">" "$file")
 
-    if [ "$taxa_count" -lt "$MIN_TAXA" ]; then
-        mv "$file" "$DISCARD_DIR/"
-        ((removed_count++))
-    else
-        ((kept_count++))
-    fi
-done
+#     if [ "$taxa_count" -lt "$MIN_TAXA" ]; then
+#         mv "$file" "$DISCARD_DIR/"
+#         ((removed_count++))
+#     else
+#         ((kept_count++))
+#     fi
+# done
 
-echo "Filtered. Kept: $kept_count | Discarded: $removed_count"
+# echo "Filtered. Kept: $kept_count | Discarded: $removed_count"
 
-################################### GENE TREES #################################
+# ################################### GENE TREES #################################
 
-echo "Starting IQ-TREE 2"
+# echo "Starting IQ-TREE 2"
 
-find "$ALIGNED_DIR" -name "*.fasta" -print0 | xargs -0 -P 16 -I {} bash -c '
-    INPUT_FILE="{}"
-    OUT_DIR=$1
-    BASE_NAME=$(basename "$INPUT_FILE" .fasta)
-    OUT_PREFIX="$OUT_DIR/$BASE_NAME"
+# find "$ALIGNED_DIR" -name "*.fasta" -print0 | xargs -0 -P 16 -I {} bash -c '
+#     INPUT_FILE="{}"
+#     OUT_DIR=$1
+#     BASE_NAME=$(basename "$INPUT_FILE" .fasta)
+#     OUT_PREFIX="$OUT_DIR/$BASE_NAME"
 
-    # Only run if output does not exist (resume capability)
-    if [ ! -f "${OUT_PREFIX}.treefile" ]; then
-         iqtree2 -s "$INPUT_FILE" -m MFP -B 1000 -T 1 --quiet --prefix "$OUT_PREFIX"
-         echo "Made $BASE_NAME tree"
-    else
-        echo "$BASE_NAME previously done; skipping"
-    fi
-' _ "$GENETREE_DIR"
+#     # Only run if output does not exist (resume capability)
+#     if [ ! -f "${OUT_PREFIX}.treefile" ]; then
+#          iqtree2 -s "$INPUT_FILE" -m MFP -B 1000 -T 1 --quiet --prefix "$OUT_PREFIX"
+#          echo "Made $BASE_NAME tree"
+#     else
+#         echo "$BASE_NAME previously done; skipping"
+#     fi
+# ' _ "$GENETREE_DIR"
 
 
-echo "Concatenating trees..."
-# Combine all resulting trees
-cat "$GENETREE_DIR"/*.treefile > "$GENETREE_DIR/all_gene_trees.newick"
+# echo "Concatenating trees..."
+# # Combine all resulting trees
+# cat "$GENETREE_DIR"/*.treefile > "$GENETREE_DIR/all_gene_trees.newick"
 
 
 ##################################### ASTRAL ##################################
@@ -124,7 +124,7 @@ cat "$GENETREE_DIR"/*.treefile > "$GENETREE_DIR/all_gene_trees.newick"
 cd "$GENETREE_DIR"
 
 echo "Collapsing low support branches"
-nw_ed all_gene_trees.newick 'i & b < '"$MIN_SUPPORT"' o' > all_gene_trees_collapsed.tre
+nw_ed all_gene_trees.newick 'i & b < '"$MIN_SUPPORT" o > all_gene_trees_collapsed.tre
 echo "Running ASTRAL..."
 
 # -Xmx16g to increase RAM to 16G
