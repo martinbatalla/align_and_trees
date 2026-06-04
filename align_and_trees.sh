@@ -1,21 +1,24 @@
 #!/bin/bash
-#SBATCH --job-name=HP4_align_tree
-#SBATCH --output=HP4_align_tree_%j.log
+#SBATCH --job-name=align_tree
+#SBATCH --output=align_tree_%j.log
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=16
 #SBATCH --mem=64G
 #SBATCH --time=48:00:00
 
 
-# --- SETUP ENVIRONMENT (Do this once) ---
-CONDA_PATH="/home/mbata001/envs/miniconda3/etc/profile.d/conda.sh"
-source "$CONDA_PATH"
-conda activate hybphaser_v1
-
+#align_and_trees.sh
+#Usage: align_and_trees.sh path/to/astral.jar path/to/base_directory/
 
 
 # --- DEFINE PATHS ---
-BASE_DIR=${1%/}
+ASTRAL_JAR=$1
+if [ -z "$ASTRAL_JAR" ]; then
+    echo "No path to astral jar file provided. Rerun using 'align_and_trees.sh path/to/astral.jar'"
+    exit 1
+fi
+
+BASE_DIR=${2%/}
 #Check if BASE_DIR was provided
 if [ -z "$BASE_DIR" ]; then
     echo "No directory provided. Using current directory: $(pwd)"
@@ -26,7 +29,7 @@ ALIGNED_DIR="$BASE_DIR/loci_aligned"
 DISCARD_DIR="$BASE_DIR/loci_discarded"
 GENETREE_DIR="$BASE_DIR/gene_trees"
 MIN_TAXA=4
-ASTRAL_JAR="/home/mbata001/envs/miniconda3/envs/hybphaser_v1/share/astral-tree-5.7.8-1/astral.5.7.8.jar"
+
 
 
 mkdir -p "$ALIGNED_DIR"
@@ -82,8 +85,6 @@ echo "Filtered. Kept: $kept_count | Discarded: $removed_count"
 
 echo "Starting IQ-TREE 2 (Parallel)..."
 
-# Run IQ-TREE 2
-
 find "$ALIGNED_DIR" -name "*.fasta" -print0 | xargs -0 -P 16 -I {} bash -c '
     INPUT_FILE="{}"
     OUT_DIR=$1
@@ -114,7 +115,7 @@ nw_ed all_gene_trees.newick 'i & b < 10' o > all_gene_trees_collapsed.tre
 
 echo "Running ASTRAL..."
 
-# INCREASED RAM TO 16G
+# -Xmx16g to increase RAM to 16G
 java -Xmx16g -jar "$ASTRAL_JAR" -i all_gene_trees_collapsed.tre -o astral_all_genes_phased.tre 2> astral.log
 
 echo "Done."
