@@ -135,7 +135,7 @@ cat "$GENETREE_DIR"/*.treefile > "$GENETREE_DIR/all_gene_trees.newick"
 cd "$GENETREE_DIR"
 
 echo "Collapsing low support branches"
-nw_ed all_gene_trees.newick 'i & b < '"$MIN_SUPPORT" o > all_gene_trees_collapsed.tre
+nw_ed all_gene_trees.newick "i & b < $MIN_SUPPORT" o > all_gene_trees_collapsed.tre
 echo "Running ASTRAL..."
 
 # -Xmx16g to increase RAM to 16G
