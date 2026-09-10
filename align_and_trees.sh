@@ -49,6 +49,16 @@ mkdir -p "$ALIGNED_DIR"
 mkdir -p "$DISCARD_DIR"
 mkdir -p "$GENETREE_DIR"
 
+# Determine IQ-TREE binary (supports both iqtree2 and newer iqtree binaries)
+if command -v iqtree2 &> /dev/null; then
+    IQ_BIN="iqtree2"
+elif command -v iqtree &> /dev/null; then
+    IQ_BIN="iqtree"
+else
+    echo "Error: Neither iqtree2 nor iqtree found in PATH." >&2
+    exit 1
+fi
+
 ################################### ALIGNING ##################################
 
 echo "--- Starting MAFFT Alignment (Parallel) ---"
@@ -96,22 +106,23 @@ echo "Filtered. Kept: $kept_count | Discarded: $removed_count"
 
 ################################### GENE TREES #################################
 
-echo "Starting IQ-TREE 2"
+echo "Starting phylogenetic inference using $IQ_BIN"
 
 find "$ALIGNED_DIR" -name "*.fasta" -print0 | xargs -0 -P 16 -I {} bash -c '
     INPUT_FILE="{}"
     OUT_DIR=$1
+    IQ_BIN=$2
     BASE_NAME=$(basename "$INPUT_FILE" .fasta)
     OUT_PREFIX="$OUT_DIR/$BASE_NAME"
 
     # Only run if output does not exist (resume capability)
     if [ ! -f "${OUT_PREFIX}.treefile" ]; then
-         iqtree2 -s "$INPUT_FILE" -m MFP -B 1000 -T 1 --quiet --prefix "$OUT_PREFIX"
+         "$IQ_BIN" -s "$INPUT_FILE" -m MFP -B 1000 -T 1 --quiet --prefix "$OUT_PREFIX"
          echo "Made $BASE_NAME tree"
     else
         echo "$BASE_NAME previously done; skipping"
     fi
-' _ "$GENETREE_DIR"
+' _ "$GENETREE_DIR" "$IQ_BIN"
 
 
 echo "Concatenating trees..."
