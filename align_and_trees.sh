@@ -73,7 +73,7 @@ find "$INPUT_DIR" -name "*.fasta" -print0 | xargs -0 -P 16 -I {} bash -c '
     if [ -s "$INPUT_FILE" ]; then
         if [ ! -f "$OUTPUT_FILE" ]; then
             # --auto automatically selects strategy (FFT-NS-2 for large, L-INS-i for small)
-            mafft --thread 1 --auto --quiet "$INPUT_FILE" > "$OUTPUT_FILE"
+            mafft --thread 1 --auto --adjustdirection --quiet "$INPUT_FILE" > "$OUTPUT_FILE"
             echo "Aligned: $BASE_NAME"
         else
             echo "Alignment for $BASE_NAME previously done; skipping"
